@@ -8,8 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink-navy:#122636;
-    --ink-navy-2:#0d1e2c;
+    #2E5A3F:#122636;
+    #2E5A3F-2:#0d1e2c;
     --paper:#F7F4EC;
     --paper-dim:#EDE9DD;
     --line:#25455c;
@@ -24,7 +24,7 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--ink-navy);
+    background:var(#2E5A3F);
     background-image:
       radial-gradient(circle at 15% 0%, rgba(239,162,59,0.10), transparent 40%),
       repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 48px),
@@ -70,8 +70,8 @@
   }
   .tab-btn .num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber); border:1px solid rgba(239,162,59,.45); border-radius:3px; padding:1px 5px;}
   .tab-btn:hover{background:rgba(247,244,236,0.11); color:var(--paper);}
-  .tab-btn.active{background:var(--paper); color:var(--ink-navy); border-color:var(--paper);}
-  .tab-btn.active .num{border-color:var(--ink-navy); color:var(--ink-navy);}
+  .tab-btn.active{background:var(--paper); color:var(#2E5A3F); border-color:var(--paper);}
+  .tab-btn.active .num{border-color:var(#2E5A3F); color:var(#2E5A3F);}
 
   /* ---------- panel ---------- */
   .panel{
@@ -87,7 +87,7 @@
   .panel-head p{margin:0; font-size:13.5px; color:var(--text-mute); max-width:460px; line-height:1.5;}
   .badge{
     font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-    background: var(--ink-navy); color:var(--paper); padding:5px 10px; border-radius:20px; white-space:nowrap;
+    background: var(#2E5A3F); color:var(--paper); padding:5px 10px; border-radius:20px; white-space:nowrap;
   }
 
   .grid{display:grid; grid-template-columns: 1.05fr 0.95fr; gap:0;}
@@ -122,7 +122,7 @@
   /* ---------- result column ---------- */
   .result-col{padding:24px 28px 30px; display:flex; flex-direction:column; gap:16px;}
   .ticket{
-    position:relative; background:var(--ink-navy); color:var(--paper); border-radius:10px;
+    position:relative; background:var(#2E5A3F); color:var(--paper); border-radius:10px;
     padding:22px 22px 20px; overflow:hidden;
   }
   .ticket::before{
@@ -146,7 +146,7 @@
   .bk-row:last-child{border-bottom:none;}
   .bk-row .k{color:var(--text-mute);}
   .bk-row .v{font-family:'IBM Plex Mono',monospace; font-weight:600;}
-  .bk-total{display:flex; justify-content:space-between; font-size:13.5px; padding-top:9px; margin-top:4px; border-top:1.5px solid var(--ink-navy); font-weight:700;}
+  .bk-total{display:flex; justify-content:space-between; font-size:13.5px; padding-top:9px; margin-top:4px; border-top:1.5px solid var(#2E5A3F); font-weight:700;}
 
   .footnote-box{background:rgba(200,80,58,0.08); border:1px solid rgba(200,80,58,0.25); border-radius:9px; padding:12px 14px; font-size:12.5px; color:#8a3a2a; line-height:1.55;}
   .footnote-box strong{color:var(--cargo-red);}
@@ -154,15 +154,15 @@
   /* zone reference */
   .zone-ref{margin-top:4px;}
   .zone-ref summary{cursor:pointer; font-size:12.5px; color:var(--text-mute); font-family:'IBM Plex Mono',monospace; letter-spacing:.03em;}
-  .zone-ref summary:hover{color:var(--ink-navy);}
+  .zone-ref summary:hover{color:var(#2E5A3F);}
   .zone-list{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px;}
   @media (max-width:600px){ .zone-list{grid-template-columns:1fr;} }
   .zone-list .zc{background:#fff; border:1px solid rgba(18,38,54,0.12); border-radius:8px; padding:10px 12px;}
-  .zone-list .zc h5{margin:0 0 6px; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono',monospace; color:var(--ink-navy);}
+  .zone-list .zc h5{margin:0 0 6px; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono',monospace; color:var(#2E5A3F);}
   .zone-list .zc p{margin:0; font-size:12px; color:var(--text-mute); line-height:1.5;}
 
   /* date calc specific */
-  .date-window{background:#fff; border:1.5px solid var(--ink-navy); border-radius:10px; padding:18px 20px;}
+  .date-window{background:#fff; border:1.5px solid var(#2E5A3F); border-radius:10px; padding:18px 20px;}
   .date-window .dw-row{display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;}
   .dw-block{text-align:center;}
   .dw-block .lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mute);}
@@ -181,7 +181,7 @@
     background:var(--paper-dim); color:var(--text-mute); border:1px solid rgba(18,38,54,0.14);
     border-radius:20px; padding:7px 14px; cursor:pointer;
   }
-  .admin-subtab-btn.active{background:var(--ink-navy); color:var(--paper); border-color:var(--ink-navy);}
+  .admin-subtab-btn.active{background:var(#2E5A3F); color:var(--paper); border-color:var(#2E5A3F);}
   .admin-section{background:#fff; border:1px solid rgba(18,38,54,0.12); border-radius:10px; padding:18px 20px; margin-bottom:18px;}
   .admin-section h3{margin:0 0 4px; font-family:'Space Grotesk',sans-serif; font-size:16px;}
   .admin-section h4{margin:0; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-mute);}
@@ -190,9 +190,9 @@
   .admin-row .af{flex:1; min-width:140px;}
   .admin-row label{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-mute); margin-bottom:5px;}
   .admin-row input{width:100%; font-family:'Inter',sans-serif; font-size:14px; padding:9px 10px; border-radius:6px; border:1.5px solid rgba(18,38,54,0.18);}
-  .btn-primary{background:var(--ink-navy); color:var(--paper); border:none; border-radius:6px; padding:10px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
-  .btn-primary:hover{background:var(--ink-navy-2);}
-  .btn-secondary{background:none; border:1.5px solid rgba(18,38,54,0.3); color:var(--ink-navy); border-radius:6px; padding:9px 15px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .btn-primary{background:var(#2E5A3F); color:var(--paper); border:none; border-radius:6px; padding:10px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .btn-primary:hover{background:var(#2E5A3F-2);}
+  .btn-secondary{background:none; border:1.5px solid rgba(18,38,54,0.3); color:var(#2E5A3F); border-radius:6px; padding:9px 15px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
   .btn-secondary:hover{background:rgba(18,38,54,0.06);}
   .btn-ghost-danger{background:none; border:1px solid rgba(200,80,58,0.4); color:var(--cargo-red); border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:'Inter',sans-serif;}
   .btn-ghost-danger:hover{background:rgba(200,80,58,0.08);}
@@ -213,13 +213,13 @@
 
   <div class="masthead">
     <div>
-      <div class="brand-eyebrow"><span class="dot"></span>Hamper &amp; Gift Logistics</div>
-      <h1>Dispatch Rate Console</h1>
-      <div class="sub">Quote box pricing and delivery windows in one place — mirrors the Multiple Point, Single Point and Delivery Date logic from the master rate sheet.</div>
+      <div class="brand-eyebrow"><span class="dot"></span>Pricing &amp; Delivery Management</div>
+      <h1>BoxUp Logistics Rate Calculator</h1>
+      <div class="sub">Rates have been updated Based on Recent Current Charges.</div>
     </div>
     <div class="manifest-id">
       <strong id="todayStr">—</strong>
-      Rates exclude GST
+      Rates doesn't include GST
     </div>
   </div>
 
@@ -346,7 +346,7 @@
           <label>Dispatch date <span class="req">*</span></label>
           <div style="display:flex; gap:8px;">
             <input type="date" id="dc-date" style="flex:1;">
-            <button type="button" id="dc-today-btn" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; background:var(--ink-navy); color:var(--paper); border:none; border-radius:7px; padding:0 16px; cursor:pointer; white-space:nowrap;">Today</button>
+            <button type="button" id="dc-today-btn" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; background:var(#2E5A3F); color:var(--paper); border:none; border-radius:7px; padding:0 16px; cursor:pointer; white-space:nowrap;">Today</button>
           </div>
         </div>
         <ul class="notes-list">
@@ -395,7 +395,7 @@
         <div class="field">
           <label>Sender (dispatch from)</label>
           <div id="promo-sender-display" style="background:#fff; border:1.5px solid rgba(18,38,54,0.18); border-radius:7px; padding:11px 12px; font-size:13.5px; line-height:1.5;">—</div>
-          <button type="button" id="promo-use-current-location" style="margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:.04em; background:none; border:1.5px solid rgba(18,38,54,0.25); color:var(--ink-navy); border-radius:6px; padding:7px 12px; cursor:pointer;">📍 Use My Current Location Instead</button>
+          <button type="button" id="promo-use-current-location" style="margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:.04em; background:none; border:1.5px solid rgba(18,38,54,0.25); color:var(#2E5A3F); border-radius:6px; padding:7px 12px; cursor:pointer;">📍 Use My Current Location Instead</button>
           <div class="hint" id="promo-sender-hint"></div>
         </div>
 
@@ -473,7 +473,7 @@
         <input type="password" id="admin-password" autocomplete="current-password" placeholder="••••••••">
       </div>
       <div id="admin-login-error" style="display:none; color:var(--cargo-red); font-size:12.5px; margin-bottom:12px;"></div>
-      <button type="button" id="admin-login-btn" style="width:100%; background:var(--ink-navy); color:var(--paper); border:none; border-radius:7px; padding:12px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;">Login</button>
+      <button type="button" id="admin-login-btn" style="width:100%; background:var(#2E5A3F); color:var(--paper); border:none; border-radius:7px; padding:12px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;">Login</button>
     </div>
 
     <div id="admin-management" style="display:none;">
@@ -485,7 +485,7 @@
     </div>
   </section>
 
-  <div class="footer">RATE LOGIC MIRRORS "Dashboard" + "Backend Formula for Dashboard" — new_rate_1.xlsx</div>
+  <div class="footer">For any Query Kindly Contact Prajwal (93640 85209) logistics@boxupgifting.com</div>
 </div>
 
 <script>
