@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Rate Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-navy:#122636;
+    --ink-navy-2:#0d1e2c;
+    --paper:#F7F4EC;
+    --paper-dim:#EDE9DD;
+    --line:#25455c;
+    --amber:#EFA23B;
+    --amber-dark:#c9821f;
+    --cargo-red:#C8503A;
+    --ok-green:#3F7D5B;
+    --text-ink:#182430;
+    --text-mute:#5b6a76;
+    --card-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px -12px rgba(18,38,54,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-navy);
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(239,162,59,0.10), transparent 40%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 48px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 48px);
+    font-family:'Inter',sans-serif;
+    color:var(--text-ink);
+    min-height:100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* ---------- header ---------- */
+  .masthead{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:20px; flex-wrap:wrap;
+    padding: 6px 6px 24px;
+    border-bottom: 1px dashed rgba(247,244,236,0.25);
+    margin-bottom: 28px;
+  }
+  .masthead .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.18em;
+    color: var(--amber); text-transform:uppercase; margin-bottom:8px; display:flex; gap:10px; align-items:center;
+  }
+  .brand-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);display:inline-block;}
+  .masthead h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(28px,4vw,42px);
+    color:var(--paper); margin:0; letter-spacing:-0.01em; line-height:1.05;
+  }
+  .masthead .sub{color:rgba(247,244,236,0.62); font-size:14.5px; margin-top:8px; max-width:520px; line-height:1.5;}
+  .manifest-id{
+    font-family:'IBM Plex Mono',monospace; color:rgba(247,244,236,0.5); font-size:12px; text-align:right;
+  }
+  .manifest-id strong{color:var(--paper); display:block; font-size:13px; letter-spacing:.04em;}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+  .tab-btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px;
+    background: rgba(247,244,236,0.06); color: rgba(247,244,236,0.68);
+    border:1px solid rgba(247,244,236,0.16); border-radius:8px 8px 0 0;
+    padding:12px 18px; cursor:pointer; transition:all .15s ease;
+    display:flex; align-items:center; gap:9px;
+  }
+  .tab-btn .num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber); border:1px solid rgba(239,162,59,.45); border-radius:3px; padding:1px 5px;}
+  .tab-btn:hover{background:rgba(247,244,236,0.11); color:var(--paper);}
+  .tab-btn.active{background:var(--paper); color:var(--ink-navy); border-color:var(--paper);}
+  .tab-btn.active .num{border-color:var(--ink-navy); color:var(--ink-navy);}
+
+  /* ---------- panel ---------- */
+  .panel{
+    background:var(--paper); border-radius: 0 12px 12px 12px; box-shadow:var(--card-shadow);
+    display:none; overflow:hidden;
+  }
+  .panel.active{display:block;}
+  .panel-head{
+    padding:22px 28px 16px; border-bottom:1px solid rgba(18,38,54,0.1);
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
+  }
+  .panel-head h2{font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 4px; letter-spacing:-.01em;}
+  .panel-head p{margin:0; font-size:13.5px; color:var(--text-mute); max-width:460px; line-height:1.5;}
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    background: var(--ink-navy); color:var(--paper); padding:5px 10px; border-radius:20px; white-space:nowrap;
+  }
+
+  .grid{display:grid; grid-template-columns: 1.05fr 0.95fr; gap:0;}
+  @media (max-width:820px){ .grid{grid-template-columns:1fr;} }
+
+  .form-col{padding:24px 28px 30px; border-right:1px dashed rgba(18,38,54,0.15);}
+  @media (max-width:820px){ .form-col{border-right:none; border-bottom:1px dashed rgba(18,38,54,0.15);} }
+
+  .field{margin-bottom:18px;}
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--text-mute); margin-bottom:6px;
+  }
+  .field label .req{color:var(--cargo-red);}
+  select, input[type="number"], input[type="date"]{
+    width:100%; font-family:'Inter',sans-serif; font-size:15px; font-weight:500;
+    padding:11px 12px; border-radius:7px; border:1.5px solid rgba(18,38,54,0.18);
+    background:#fff; color:var(--text-ink); appearance:none; -webkit-appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1L7 7L13 1' stroke='%23122636' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;
+  }
+  select:focus, input:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(239,162,59,0.22);}
+  .hint{font-size:12px; color:var(--text-mute); margin-top:5px;}
+  .tat-chip{
+    display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:12px;
+    background:rgba(63,125,91,0.12); color:var(--ok-green); border-radius:6px; padding:5px 9px; font-weight:600;
+  }
+
+  /* ---------- result column ---------- */
+  .result-col{padding:24px 28px 30px; display:flex; flex-direction:column; gap:16px;}
+  .ticket{
+    position:relative; background:var(--ink-navy); color:var(--paper); border-radius:10px;
+    padding:22px 22px 20px; overflow:hidden;
+  }
+  .ticket::before{
+    content:""; position:absolute; inset:0;
+    background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 10px);
+    pointer-events:none;
+  }
+  .ticket .t-label{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:rgba(247,244,236,0.55);}
+  .ticket .t-amount{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:40px; margin:6px 0 2px; color:var(--paper); letter-spacing:-0.01em;}
+  .ticket .t-amount .cur{font-size:22px; color:var(--amber); margin-right:4px;}
+  .ticket .t-note{font-size:12.5px; color:rgba(247,244,236,0.6); margin-top:6px; line-height:1.5;}
+  .ticket .stamp{
+    position:absolute; top:16px; right:18px; font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:11px; letter-spacing:.1em; color:var(--amber); border:1.5px solid var(--amber);
+    border-radius:5px; padding:4px 8px; transform:rotate(4deg); text-transform:uppercase;
+  }
+
+  .breakdown{background:#fff; border:1px solid rgba(18,38,54,0.12); border-radius:9px; padding:14px 16px;}
+  .breakdown h4{margin:0 0 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-mute);}
+  .bk-row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px dotted rgba(18,38,54,0.12);}
+  .bk-row:last-child{border-bottom:none;}
+  .bk-row .k{color:var(--text-mute);}
+  .bk-row .v{font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .bk-total{display:flex; justify-content:space-between; font-size:13.5px; padding-top:9px; margin-top:4px; border-top:1.5px solid var(--ink-navy); font-weight:700;}
+
+  .footnote-box{background:rgba(200,80,58,0.08); border:1px solid rgba(200,80,58,0.25); border-radius:9px; padding:12px 14px; font-size:12.5px; color:#8a3a2a; line-height:1.55;}
+  .footnote-box strong{color:var(--cargo-red);}
+
+  /* zone reference */
+  .zone-ref{margin-top:4px;}
+  .zone-ref summary{cursor:pointer; font-size:12.5px; color:var(--text-mute); font-family:'IBM Plex Mono',monospace; letter-spacing:.03em;}
+  .zone-ref summary:hover{color:var(--ink-navy);}
+  .zone-list{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px;}
+  @media (max-width:600px){ .zone-list{grid-template-columns:1fr;} }
+  .zone-list .zc{background:#fff; border:1px solid rgba(18,38,54,0.12); border-radius:8px; padding:10px 12px;}
+  .zone-list .zc h5{margin:0 0 6px; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono',monospace; color:var(--ink-navy);}
+  .zone-list .zc p{margin:0; font-size:12px; color:var(--text-mute); line-height:1.5;}
+
+  /* date calc specific */
+  .date-window{background:#fff; border:1.5px solid var(--ink-navy); border-radius:10px; padding:18px 20px;}
+  .date-window .dw-row{display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;}
+  .dw-block{text-align:center;}
+  .dw-block .lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mute);}
+  .dw-block .val{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; margin-top:4px;}
+  .dw-arrow{color:var(--amber); font-size:20px;}
+  .notes-list{list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .notes-list li{font-size:12.5px; color:var(--text-mute); padding-left:16px; position:relative; line-height:1.5;}
+  .notes-list li::before{content:"—"; position:absolute; left:0; color:var(--amber);}
+
+  .footer{margin-top:26px; text-align:center; font-size:12px; color:rgba(247,244,236,0.4); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- admin panel ---------- */
+  .admin-subtabs{display:flex; gap:6px; flex-wrap:wrap;}
+  .admin-subtab-btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12.5px;
+    background:var(--paper-dim); color:var(--text-mute); border:1px solid rgba(18,38,54,0.14);
+    border-radius:20px; padding:7px 14px; cursor:pointer;
+  }
+  .admin-subtab-btn.active{background:var(--ink-navy); color:var(--paper); border-color:var(--ink-navy);}
+  .admin-section{background:#fff; border:1px solid rgba(18,38,54,0.12); border-radius:10px; padding:18px 20px; margin-bottom:18px;}
+  .admin-section h3{margin:0 0 4px; font-family:'Space Grotesk',sans-serif; font-size:16px;}
+  .admin-section h4{margin:0; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-mute);}
+  .admin-section .admin-desc{margin:0 0 14px; font-size:12.5px; color:var(--text-mute); line-height:1.5;}
+  .admin-row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px;}
+  .admin-row .af{flex:1; min-width:140px;}
+  .admin-row label{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-mute); margin-bottom:5px;}
+  .admin-row input{width:100%; font-family:'Inter',sans-serif; font-size:14px; padding:9px 10px; border-radius:6px; border:1.5px solid rgba(18,38,54,0.18);}
+  .btn-primary{background:var(--ink-navy); color:var(--paper); border:none; border-radius:6px; padding:10px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .btn-primary:hover{background:var(--ink-navy-2);}
+  .btn-secondary{background:none; border:1.5px solid rgba(18,38,54,0.3); color:var(--ink-navy); border-radius:6px; padding:9px 15px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .btn-secondary:hover{background:rgba(18,38,54,0.06);}
+  .btn-ghost-danger{background:none; border:1px solid rgba(200,80,58,0.4); color:var(--cargo-red); border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:'Inter',sans-serif;}
+  .btn-ghost-danger:hover{background:rgba(200,80,58,0.08);}
+  .chip-list{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{display:flex; align-items:center; gap:8px; background:var(--paper-dim); border:1px solid rgba(18,38,54,0.12); border-radius:20px; padding:6px 8px 6px 12px; font-size:12.5px;}
+  .chip button{background:none; border:none; color:var(--cargo-red); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px;}
+  .admin-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .admin-table th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-mute); padding:6px 8px; border-bottom:1.5px solid rgba(18,38,54,0.15);}
+  .admin-table td{padding:6px 8px; border-bottom:1px dotted rgba(18,38,54,0.12); vertical-align:middle;}
+  .admin-table input[type="number"], .admin-table input[type="text"], .admin-table input[type="password"]{
+    width:100%; padding:7px 8px; font-size:13px; border-radius:5px; border:1.5px solid rgba(18,38,54,0.18);
+  }
+  .admin-logout{background:none; border:1px solid rgba(18,38,54,0.25); color:var(--text-ink); border-radius:6px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-family:'Inter',sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="brand-eyebrow"><span class="dot"></span>Hamper &amp; Gift Logistics</div>
+      <h1>Dispatch Rate Console</h1>
+      <div class="sub">Quote box pricing and delivery windows in one place — mirrors the Multiple Point, Single Point and Delivery Date logic from the master rate sheet.</div>
+    </div>
+    <div class="manifest-id">
+      <strong id="todayStr">—</strong>
+      Rates exclude GST
+    </div>
+  </div>
+
+  <div id="backend-error-banner" class="footnote-box" style="display:none; margin-bottom:18px;"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="multi"><span class="num">01</span> Multiple Point Delivery</button>
+    <button class="tab-btn" data-tab="single"><span class="num">02</span> Single Point Delivery</button>
+    <button class="tab-btn" data-tab="date"><span class="num">03</span> Delivery Date Calculator</button>
+    <button class="tab-btn" data-tab="promo"><span class="num">04</span> Promotional Product</button>
+    <button class="tab-btn" data-tab="admin"><span class="num">05</span> Admin Panel</button>
+  </div>
+
+  <!-- ===================== PANEL 1: MULTIPLE POINT ===================== -->
+  <section class="panel active" id="panel-multi">
+    <div class="panel-head">
+      <div>
+        <h2>Multiple Point Delivery</h2>
+        <p>Each box ships to a different address. Rate is a flat price per box based on packaging and shipping mode.</p>
+      </div>
+      <div class="badge">Per-box rate</div>
+    </div>
+    <div class="grid">
+      <div class="form-col">
+        <div class="field">
+          <label>Type of outer packaging <span class="req">*</span></label>
+          <select id="mp-pack"></select>
+        </div>
+        <div class="field">
+          <label>Type of shipment (mode of delivery) <span class="req">*</span></label>
+          <select id="mp-ship"></select>
+          <div id="mp-tat" class="tat-chip" style="display:none;"></div>
+        </div>
+        <div class="field">
+          <label>Number of boxes <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optional — estimates a total)</span></label>
+          <input type="number" id="mp-qty" min="1" step="1" value="1">
+          <div class="hint">The source rate sheet only quotes a per-box price; this multiplier is a convenience estimate.</div>
+        </div>
+      </div>
+      <div class="result-col">
+        <div class="ticket">
+          <div class="stamp">Rate</div>
+          <div class="t-label">Per box price</div>
+          <div class="t-amount" id="mp-price">—</div>
+          <div class="t-note" id="mp-note">Choose a packaging type and shipping mode to see the rate.</div>
+        </div>
+        <div class="breakdown" id="mp-total-box" style="display:none;">
+          <h4>Estimated total</h4>
+          <div class="bk-row"><span class="k">Per box price</span><span class="v" id="mp-bk-unit">—</span></div>
+          <div class="bk-row"><span class="k">Number of boxes</span><span class="v" id="mp-bk-qty">—</span></div>
+          <div class="bk-total"><span>Estimated total (excl. GST)</span><span id="mp-bk-total">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PANEL 2: SINGLE POINT ===================== -->
+  <section class="panel" id="panel-single">
+    <div class="panel-head">
+      <div>
+        <h2>Single Point Delivery</h2>
+        <p>All boxes ship together to one address. Boxes are consolidated into cartons; price is driven by carton volumetric weight and destination zone.</p>
+      </div>
+      <div class="badge">Consolidated rate</div>
+    </div>
+    <div class="grid">
+      <div class="form-col">
+        <div class="field">
+          <label>Type of outer packaging <span class="req">*</span></label>
+          <select id="sp-pack"></select>
+          <div class="hint">1–3 hampers use the matching Multiple Point Delivery rate. 4+ hampers consolidate into cartons.</div>
+        </div>
+        <div class="field">
+          <label>Type of shipment (mode of delivery) <span class="req">*</span></label>
+          <select id="sp-ship"></select>
+          <div id="sp-tat" class="tat-chip" style="display:none;"></div>
+        </div>
+        <div class="field">
+          <label>Number of hampers / products <span class="req">*</span></label>
+          <input type="number" id="sp-qty" min="1" step="1" value="20">
+        </div>
+        <div class="field">
+          <label>Destination zone <span class="req">*</span></label>
+          <select id="sp-zone"></select>
+        </div>
+        <details class="zone-ref">
+          <summary>Which state is in which zone?</summary>
+          <div class="zone-list" id="zone-list"></div>
+        </details>
+      </div>
+      <div class="result-col">
+        <div class="ticket">
+          <div class="stamp">Rate</div>
+          <div class="t-label">Total price (all boxes, consolidated)</div>
+          <div class="t-amount" id="sp-price">—</div>
+          <div class="t-note" id="sp-note">Choose a packaging type, shipping mode and zone to see the rate.</div>
+        </div>
+        <div class="breakdown" id="sp-breakdown" style="display:none;">
+          <h4>Carton breakdown</h4>
+          <div id="sp-bk-rows"></div>
+          <div class="bk-total"><span>Total (excl. GST)</span><span id="sp-bk-total">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PANEL 3: DATE CALCULATOR ===================== -->
+  <section class="panel" id="panel-date">
+    <div class="panel-head">
+      <div>
+        <h2>Delivery Date Calculator</h2>
+        <p>Estimate the delivery window from a dispatch date. Weekends are skipped, matching standard business-day transit.</p>
+      </div>
+      <div class="badge">Business days only</div>
+    </div>
+    <div class="grid">
+      <div class="form-col">
+        <div class="field">
+          <label>Type of shipment <span class="req">*</span></label>
+          <select id="dc-ship"></select>
+          <div id="dc-tat" class="tat-chip" style="display:none;"></div>
+        </div>
+        <div class="field">
+          <label>Dispatch date <span class="req">*</span></label>
+          <div style="display:flex; gap:8px;">
+            <input type="date" id="dc-date" style="flex:1;">
+            <button type="button" id="dc-today-btn" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; background:var(--ink-navy); color:var(--paper); border:none; border-radius:7px; padding:0 16px; cursor:pointer; white-space:nowrap;">Today</button>
+          </div>
+        </div>
+        <ul class="notes-list">
+          <li>Minimum delivery timeline is 72 hours (3 business days) for Express shipping; 1-day delivery is not available.</li>
+          <li>Please ensure these delivery timelines are clearly communicated to the customer.</li>
+          <li>The package will be delivered by the end of the day within standard office hours.</li>
+          <li>Do not make any delivery commitments without prior confirmation from the logistics team.</li>
+          <li>All Bangalore dispatches: kindly connect with the logistics team directly.</li>
+        </ul>
+      </div>
+      <div class="result-col">
+        <div class="date-window">
+          <div class="dw-row">
+            <div class="dw-block">
+              <div class="lbl">Dispatch</div>
+              <div class="val" id="dc-dispatch">—</div>
+            </div>
+            <div class="dw-arrow">→</div>
+            <div class="dw-block">
+              <div class="lbl">Earliest arrival</div>
+              <div class="val" id="dc-early">—</div>
+            </div>
+            <div class="dw-arrow">–</div>
+            <div class="dw-block">
+              <div class="lbl">Latest arrival</div>
+              <div class="val" id="dc-late">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="footnote-box"><strong>Note —</strong> This window skips Saturdays and Sundays and assumes no public holidays. Confirm any holiday-affected routes with the logistics team.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PANEL 4: PROMOTIONAL PRODUCT ===================== -->
+  <section class="panel" id="panel-promo">
+    <div class="panel-head">
+      <div>
+        <h2>Promotional Product</h2>
+        <p>Enter the product weight and quantity, search the delivery location, and the zone + rate are detected automatically from sender/receiver pincode.</p>
+      </div>
+      <div class="badge" id="promo-zone-badge">Zone —</div>
+    </div>
+    <div class="grid">
+      <div class="form-col">
+        <div class="field">
+          <label>Sender (dispatch from)</label>
+          <div id="promo-sender-display" style="background:#fff; border:1.5px solid rgba(18,38,54,0.18); border-radius:7px; padding:11px 12px; font-size:13.5px; line-height:1.5;">—</div>
+          <button type="button" id="promo-use-current-location" style="margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; letter-spacing:.04em; background:none; border:1.5px solid rgba(18,38,54,0.25); color:var(--ink-navy); border-radius:6px; padding:7px 12px; cursor:pointer;">📍 Use My Current Location Instead</button>
+          <div class="hint" id="promo-sender-hint"></div>
+        </div>
+
+        <div class="field">
+          <label>Delivery location (city / company name) <span class="req">*</span></label>
+          <div style="position:relative;">
+            <input type="text" id="promo-receiver-search" placeholder="Start typing a city, address, or company name...">
+            <div id="promo-receiver-results" style="display:none; position:absolute; z-index:20; top:100%; left:0; right:0; background:#fff; border:1.5px solid rgba(18,38,54,0.18); border-top:none; border-radius:0 0 7px 7px; max-height:220px; overflow-y:auto; box-shadow:0 8px 20px -8px rgba(18,38,54,0.3);"></div>
+          </div>
+          <div class="hint">Powered by OpenStreetMap search — pick a result to auto-fill City / State / Pincode below.</div>
+        </div>
+        <div class="admin-row" style="margin-bottom:8px;">
+          <div class="af"><label>City</label><input type="text" id="promo-r-city" placeholder="Auto-filled"></div>
+          <div class="af"><label>State</label><input type="text" id="promo-r-state" placeholder="Auto-filled"></div>
+          <div class="af"><label>Pincode</label><input type="text" id="promo-r-pincode" placeholder="Auto-filled"></div>
+        </div>
+        <div class="hint" style="margin-bottom:18px;">Didn't get the right match? You can correct City / State / Pincode by hand — the zone recalculates automatically.</div>
+
+        <div class="field">
+          <label>Number of products <span class="req">*</span></label>
+          <input type="number" id="promo-qty" min="1" step="1" value="1">
+        </div>
+        <div class="field">
+          <label>Weight per product (with packaging) <span class="req">*</span></label>
+          <input type="number" id="promo-unit-weight" min="0" step="0.01" placeholder="e.g. 0.55 or 1.55">
+          <div class="hint" id="promo-weight-hint">Enter with 2 decimal points. Values under 1 are read as <strong>grams</strong> (e.g. 0.55 → 0.55 g); values 1.00 and above are read as <strong>kilograms</strong> (e.g. 1.55 → 1.55 kg).</div>
+        </div>
+        <div class="field">
+          <label>Mode <span class="req">*</span></label>
+          <select id="promo-mode"></select>
+        </div>
+
+        <div id="promo-box-dims" style="display:none;">
+          <div class="footnote-box" style="margin-bottom:14px;"><strong>Boxing required —</strong> total weight exceeds the largest tier in the rate card. Enter the outer box dimensions to calculate a Standard / Express rate.</div>
+          <div class="admin-row">
+            <div class="af"><label>L (cm)</label><input type="number" id="promo-box-l" min="0"></div>
+            <div class="af"><label>B (cm)</label><input type="number" id="promo-box-b" min="0"></div>
+            <div class="af"><label>H (cm)</label><input type="number" id="promo-box-h" min="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-col">
+        <div class="ticket">
+          <div class="stamp" id="promo-stamp">Rate</div>
+          <div class="t-label" id="promo-price-label">Price</div>
+          <div class="t-amount" id="promo-price">—</div>
+          <div class="t-note" id="promo-note">Fill in the product and delivery details to see a price.</div>
+        </div>
+        <div class="breakdown" id="promo-breakdown" style="display:none;">
+          <h4 id="promo-breakdown-title">Details</h4>
+          <div id="promo-breakdown-rows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PANEL 5: ADMIN ===================== -->
+  <section class="panel" id="panel-admin">
+    <div class="panel-head">
+      <div>
+        <h2>Admin Panel</h2>
+        <p>Multiple Point Delivery, Single Point Delivery, Delivery Timelines and Users are managed independently — nothing is shared across categories automatically.</p>
+      </div>
+      <div class="badge" id="admin-status-badge">Logged out</div>
+    </div>
+
+    <div id="admin-login-view" style="padding:36px 28px; max-width:380px;">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="admin-username" autocomplete="username" placeholder="admin">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="admin-password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div id="admin-login-error" style="display:none; color:var(--cargo-red); font-size:12.5px; margin-bottom:12px;"></div>
+      <button type="button" id="admin-login-btn" style="width:100%; background:var(--ink-navy); color:var(--paper); border:none; border-radius:7px; padding:12px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;">Login</button>
+      <div class="hint" style="margin-top:14px;">Default seed credentials (backend/store.js): <strong>admin</strong> / <strong>admin123</strong> — change this after first login.</div>
+      <div class="footnote-box" style="margin-top:16px;"><strong>Note —</strong> This admin panel talks to a self-hosted backend server (see the /backend folder). Saved data persists there — set <code>API_BASE_URL</code> near the top of this file's script to your deployed server's address before sharing this page.</div>
+    </div>
+
+    <div id="admin-management" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 28px 0; flex-wrap:wrap; gap:12px;">
+        <div class="admin-subtabs" id="admin-subtabs"></div>
+        <button class="admin-logout" id="admin-logout-btn">Log out</button>
+      </div>
+      <div id="admin-subpanel" style="padding:20px 28px 32px;"></div>
+    </div>
+  </section>
+
+  <div class="footer">RATE LOGIC MIRRORS "Dashboard" + "Backend Formula for Dashboard" — new_rate_1.xlsx</div>
+</div>
+
+<script>
+/* =====================================================================
+   BACKEND CONNECTION
+   All admin data now lives on your self-hosted API server instead of in
+   browser memory — set this to wherever you deployed the backend from
+   the accompanying /backend folder (see backend/README.md).
+===================================================================== */
+const API_BASE_URL = 'https://dispatch-rate-console.onrender.com/api'; // <-- change this to your deployed backend URL
+
+let authToken = null; // set after a successful admin login; kept in memory only
+
+async function apiFetch(path, options = {}){
+  const headers = Object.assign({'Content-Type':'application/json'}, options.headers || {});
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  let res;
+  try{
+    res = await fetch(API_BASE_URL + path, Object.assign({}, options, {headers}));
+  } catch(err){
+    throw new Error(`Could not reach the backend at ${API_BASE_URL}. Is the server running and is API_BASE_URL set correctly?`);
+  }
+  let body = null;
+  try{ body = await res.json(); } catch(e){ /* no JSON body */ }
+  if(!res.ok){
+    throw new Error((body && body.error) || `Request failed (${res.status}).`);
+  }
+  return body;
+}
+
+/* =====================================================================
+   DATA MODEL
+   These mirror what the backend returns — populated by loadPublicData()
+   and loadAdminState() below, never hand-edited directly. Every admin
+   action calls the API, then reloads this state and re-renders.
+===================================================================== */
+
+const CONTACT_NOTE = 'Contact Logistics Person — 9364085209';
+
+/* ---- 1. Multiple Point Delivery ---- */
+let MP_PACKAGING = [];
+let MP_SHIPPING = [];
+let MP_RATES = {};
+
+/* ---- 2. Single Point Delivery ---- */
+let SP_SHIPPING = []; // {name, volumeDivisor}
+let SP_ZONES = [];
+let SP_ZONE_RATES = {};
+let SP_PACKAGING = []; // {name, packSizes:[{size,l,b,h}]}
+
+/* ---- 3. Edit Delivery Timelines ---- */
+let DT_SHIPPING = []; // {name, tat, earlyDays, lateDays}
+
+/* ---- 5. Promotional Product ---- */
+let PP_RATE_TABLE = []; // {id, mode, minWeight, zoneRates:{A:{fwd,rto}, ...}}
+let PP_METRO_CITIES = [];
+let PP_SPECIAL_STATES = [];
+let PP_BOX_RATES = {volumeDivisor:5000, zones:{}};
+let PP_SENDER_ADDRESS = {name:'', addressLine:'', city:'', state:'', pincode:''};
+const PP_ZONE_INFO = {
+  A: {label:'Zone A', desc:'Within City'},
+  B: {label:'Zone B', desc:'Within State'},
+  C: {label:'Zone C', desc:'Metro to Metro'},
+  D: {label:'Zone D', desc:'Rest of India'},
+  E: {label:'Zone E', desc:'Special Destination'},
+};
+let promoCurrentSender = null; // set once PP_SENDER_ADDRESS loads, or overridden via geolocation
+let promoReceiver = null; // {city, state, pincode, displayName}
+let promoSearchDebounce = null;
+
+/* ---- 4. Manage Users ---- */
+let USERS = []; // {username} — loaded only after admin login
+let adminLoggedInAs = null;
+let adminActiveTab = 'mp';
+
+const ZONE_STATES = {
+  'North Zone': ['Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Jharkhand','Madhya Pradesh','Maharashtra','Odisha','Punjab','Rajasthan','Telangana','Uttar Pradesh','West Bengal'],
+  'South Zone': ['Andhra Pradesh','Karnataka','Kerala','Tamil Nadu','Telangana'],
+  'Special Location': ['Arunachal Pradesh','Assam','Manipur','Meghalaya','Mizoram','Nagaland','Tripura','Himachal Pradesh','Jammu & Kashmir (J&K)','Sikkim','Ladakh','Uttarakhand'],
+};
+
+/* ================= HELPERS ================= */
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+function esc(s){ return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function firstWord(name){ return String(name).trim().split(/\s+/)[0] || name; }
+
+function fmtDate(d){
+  if(!d) return '—';
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+function workday(startDate, days){
+  const date = new Date(startDate.getTime());
+  let count = 0;
+  while(count < days){
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if(day !== 0 && day !== 6) count++;
+  }
+  return date;
+}
+
+// Generic greedy carton packer — works with any admin-defined pack sizes.
+// Largest sizes fill exactly; the smallest defined size rounds up to cover any remainder.
+function packDynamic(packSizes, totalBoxes){
+  const sizes = [...packSizes].sort((a,b) => b.size - a.size);
+  if(sizes.length === 0) return [];
+  let remaining = totalBoxes;
+  const result = [];
+  sizes.forEach((ps, idx) => {
+    const isLast = idx === sizes.length - 1;
+    let n;
+    if(isLast){
+      n = remaining > 0 ? Math.ceil(remaining / ps.size) : 0;
+    } else {
+      n = Math.floor(remaining / ps.size);
+      remaining -= n * ps.size;
+    }
+    if(n > 0) result.push({...ps, count:n});
+  });
+  return result;
+}
+
+function singlePointQuote(packName, shipName, totalBoxes, zone){
+  if(!packName || !shipName || !zone || !totalBoxes || totalBoxes <= 0){
+    return {total:0, rows:[], custom:true};
+  }
+  if(totalBoxes <= 3){
+    const unitRate = (MP_RATES[packName] && MP_RATES[packName][shipName] !== undefined) ? MP_RATES[packName][shipName] : null;
+    if(unitRate === null || unitRate === undefined){
+      return {total:0, rows:[], custom:true, reason:'No matching Multiple Point Delivery rate found for this packaging type and shipping mode.'};
+    }
+    const total = unitRate * totalBoxes;
+    return {
+      total, raw:total, flat:true,
+      rows:[{label:`${totalBoxes} × ${packName} box @ ${inr(unitRate)} (Multiple Point rate card)`, lineTotal:total}],
+      custom:false
+    };
+  }
+  const spPack = SP_PACKAGING.find(p => p.name === packName);
+  const spShip = SP_SHIPPING.find(s => s.name === shipName);
+  if(!spPack || !spShip || !spPack.packSizes.length){
+    return {total:0, rows:[], custom:true, reason:'This packaging type has no carton pack sizes on file yet — add them in Admin → Single Point Delivery.'};
+  }
+  const rate = (SP_ZONE_RATES[zone] && SP_ZONE_RATES[zone][shipName]) || 0;
+  const divisor = spShip.volumeDivisor || 1;
+  const packed = packDynamic(spPack.packSizes, totalBoxes);
+  let total = 0;
+  const rows = packed.map(p => {
+    const volWeight = (p.l * p.b * p.h) / divisor;
+    const lineTotal = p.count * rate * volWeight;
+    total += lineTotal;
+    return {denom:p.size, n:p.count, volWeight, lineTotal};
+  });
+  return {total, raw:total, rows, custom:false};
+}
+
+/* ================= SELECT POPULATION ================= */
+function fillSelect(el, options, withPlaceholder){
+  const prev = el.value;
+  const opts = options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  el.innerHTML = withPlaceholder ? `<option value="" disabled selected>Select...</option>${opts}` : opts;
+  if(options.includes(prev)) el.value = prev;
+}
+
+function rebuildAllSelects(){
+  fillSelect(document.getElementById('mp-pack'), MP_PACKAGING, true);
+  fillSelect(document.getElementById('mp-ship'), MP_SHIPPING, true);
+  fillSelect(document.getElementById('sp-pack'), SP_PACKAGING.map(p => p.name), true);
+  fillSelect(document.getElementById('sp-ship'), SP_SHIPPING.map(s => s.name), true);
+  fillSelect(document.getElementById('sp-zone'), SP_ZONES, true);
+  fillSelect(document.getElementById('dc-ship'), DT_SHIPPING.map(s => s.name), true);
+  const promoModes = [...new Set(PP_RATE_TABLE.map(r => r.mode))];
+  fillSelect(document.getElementById('promo-mode'), promoModes, true);
+  renderPromoSenderDisplay();
+  renderMultiPoint();
+  renderSinglePoint();
+  renderDateCalc();
+  renderPromo();
+}
+
+function renderPromoSenderDisplay(){
+  const el = document.getElementById('promo-sender-display');
+  if(!el) return;
+  const s = promoCurrentSender || PP_SENDER_ADDRESS;
+  if(!s || !s.city){
+    el.textContent = '—';
+    return;
+  }
+  el.innerHTML = `<strong>${esc(s.name || 'Sender')}</strong><br>${esc(s.addressLine || '')}<br>${esc(s.city)}, ${esc(s.state)} — ${esc(s.pincode)}`;
+}
+
+function renderZoneList(){
+  document.getElementById('zone-list').innerHTML = SP_ZONES.map(z => `
+    <div class="zc"><h5>${esc(z)}</h5><p>${esc((ZONE_STATES[z]||[]).join(', '))}</p></div>
+  `).join('');
+}
+
+// Loads everything the 3 customer-facing calculators need. Called on page load,
+// and again after any admin change so the dashboard reflects it immediately.
+async function loadPublicData(){
+  try{
+    const d = await apiFetch('/public/dashboard');
+    MP_PACKAGING = d.mpPackaging || [];
+    MP_SHIPPING = d.mpShipping || [];
+    MP_RATES = d.mpRates || {};
+    SP_SHIPPING = d.spShipping || [];
+    SP_ZONES = d.spZones || [];
+    SP_ZONE_RATES = d.spZoneRates || {};
+    SP_PACKAGING = d.spPackaging || [];
+    DT_SHIPPING = d.dtShipping || [];
+    PP_RATE_TABLE = d.ppRateTable || [];
+    PP_METRO_CITIES = d.ppMetroCities || [];
+    PP_SPECIAL_STATES = d.ppSpecialStates || [];
+    PP_BOX_RATES = d.ppBoxRates || {volumeDivisor:5000, zones:{}};
+    PP_SENDER_ADDRESS = d.ppSenderAddress || {name:'', addressLine:'', city:'', state:'', pincode:''};
+    promoCurrentSender = {...PP_SENDER_ADDRESS};
+    renderZoneList();
+    rebuildAllSelects();
+  } catch(err){
+    console.error(err);
+    const banner = document.getElementById('backend-error-banner');
+    if(banner){
+      banner.style.display = 'block';
+      banner.textContent = err.message;
+    }
+  }
+}
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ================= MULTIPLE POINT DELIVERY (dashboard) ================= */
+function renderMultiPoint(){
+  const pack = document.getElementById('mp-pack').value;
+  const ship = document.getElementById('mp-ship').value;
+  const qty = parseInt(document.getElementById('mp-qty').value) || 1;
+
+  const priceEl = document.getElementById('mp-price');
+  const noteEl = document.getElementById('mp-note');
+  const totalBox = document.getElementById('mp-total-box');
+  const tatEl = document.getElementById('mp-tat');
+
+  if(!pack || !ship){
+    tatEl.style.display = 'none';
+    priceEl.innerHTML = '—';
+    noteEl.textContent = 'Choose a packaging type and shipping mode to see the rate.';
+    totalBox.style.display = 'none';
+    return;
+  }
+  tatEl.style.display = 'none';
+
+  const rate = (MP_RATES[pack] && MP_RATES[pack][ship] !== undefined) ? MP_RATES[pack][ship] : null;
+
+  if(rate === null || rate === undefined){
+    priceEl.innerHTML = 'On request';
+    noteEl.textContent = CONTACT_NOTE + ' for this packaging type.';
+    totalBox.style.display = 'none';
+    return;
+  }
+  priceEl.innerHTML = `<span class="cur">₹</span>${rate.toLocaleString('en-IN')}`;
+  noteEl.textContent = 'Price per box, excludes GST · ' + pack + ' · ' + ship;
+
+  if(qty > 1){
+    totalBox.style.display = 'block';
+    document.getElementById('mp-bk-unit').textContent = inr(rate);
+    document.getElementById('mp-bk-qty').textContent = qty;
+    document.getElementById('mp-bk-total').textContent = inr(rate * qty);
+  } else {
+    totalBox.style.display = 'none';
+  }
+}
+['mp-pack','mp-ship','mp-qty'].forEach(id => document.getElementById(id).addEventListener('input', renderMultiPoint));
+
+/* ================= SINGLE POINT DELIVERY (dashboard) ================= */
+function renderSinglePoint(){
+  const pack = document.getElementById('sp-pack').value;
+  const ship = document.getElementById('sp-ship').value;
+  const qty = parseInt(document.getElementById('sp-qty').value) || 0;
+  const zone = document.getElementById('sp-zone').value;
+
+  const priceEl = document.getElementById('sp-price');
+  const noteEl = document.getElementById('sp-note');
+  const bkBox = document.getElementById('sp-breakdown');
+  const bkRows = document.getElementById('sp-bk-rows');
+  const tatEl = document.getElementById('sp-tat');
+
+  if(!pack || !ship || !zone){
+    tatEl.style.display = 'none';
+    priceEl.innerHTML = '—';
+    noteEl.textContent = 'Choose a packaging type, shipping mode and destination zone to see the rate.';
+    bkBox.style.display = 'none';
+    return;
+  }
+  tatEl.style.display = 'none';
+
+  const quote = singlePointQuote(pack, ship, qty, zone);
+  priceEl.innerHTML = `<span class="cur">₹</span>${Math.round(quote.total).toLocaleString('en-IN')}`;
+
+  if(quote.custom){
+    noteEl.textContent = quote.reason || (CONTACT_NOTE + '.');
+    bkBox.style.display = 'none';
+    return;
+  }
+
+  if(quote.flat){
+    noteEl.textContent = `${qty} × ${pack} boxes · flat per-box rate card · ${ship.toLowerCase()} · excludes GST`;
+    bkBox.style.display = 'block';
+    bkRows.innerHTML = quote.rows.map(r => `
+      <div class="bk-row"><span class="k">${esc(r.label)}</span><span class="v">${inr(r.lineTotal)}</span></div>
+    `).join('');
+    document.getElementById('sp-bk-total').textContent = inr(quote.total);
+    return;
+  }
+
+  noteEl.textContent = `${qty} × ${pack} boxes, consolidated to ${zone}, ${ship.toLowerCase()} · excludes GST`;
+  bkBox.style.display = 'block';
+  bkRows.innerHTML = quote.rows.map(r => `
+    <div class="bk-row"><span class="k">${r.n} × carton of ${r.denom}</span><span class="v">${inr(r.lineTotal)}</span></div>
+  `).join('') || '<div class="bk-row"><span class="k">No cartons required</span><span class="v">—</span></div>';
+  document.getElementById('sp-bk-total').textContent = inr(quote.total);
+}
+['sp-pack','sp-ship','sp-qty','sp-zone'].forEach(id => document.getElementById(id).addEventListener('input', renderSinglePoint));
+
+/* ================= DELIVERY DATE CALCULATOR (dashboard) ================= */
+function renderDateCalc(){
+  const ship = document.getElementById('dc-ship').value;
+  const dateVal = document.getElementById('dc-date').value;
+  const tatEl = document.getElementById('dc-tat');
+
+  const timeline = DT_SHIPPING.find(s => s.name === ship);
+
+  if(!ship || !timeline){
+    tatEl.style.display = 'none';
+    document.getElementById('dc-dispatch').textContent = '—';
+    document.getElementById('dc-early').textContent = '—';
+    document.getElementById('dc-late').textContent = '—';
+    return;
+  }
+
+  tatEl.style.display = 'inline-flex';
+  tatEl.textContent = 'TAT: ' + timeline.tat;
+
+  if(!dateVal){
+    document.getElementById('dc-dispatch').textContent = '—';
+    document.getElementById('dc-early').textContent = '—';
+    document.getElementById('dc-late').textContent = '—';
+    return;
+  }
+  const dispatch = new Date(dateVal + 'T00:00:00');
+  const early = workday(dispatch, timeline.earlyDays);
+  const late = workday(dispatch, timeline.lateDays);
+
+  document.getElementById('dc-dispatch').textContent = fmtDate(dispatch);
+  document.getElementById('dc-early').textContent = fmtDate(early);
+  document.getElementById('dc-late').textContent = fmtDate(late);
+}
+['dc-ship','dc-date'].forEach(id => document.getElementById(id).addEventListener('input', renderDateCalc));
+
+/* =====================================================================
+   PROMOTIONAL PRODUCT (dashboard)
+===================================================================== */
+const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
+function normStr(s){ return String(s||'').trim().toLowerCase(); }
+
+// Turns a Nominatim address object into our {city, state, pincode} shape.
+function extractLocationParts(addr){
+  const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || '';
+  const state = addr.state || '';
+  const pincode = addr.postcode || '';
+  return {city, state, pincode};
+}
+
+async function nominatimSearch(query){
+  const url = `${NOMINATIM_BASE}/search?format=json&addressdetails=1&limit=6&countrycodes=in&q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, {headers:{'Accept':'application/json'}});
+  if(!res.ok) throw new Error('Location search failed.');
+  return res.json();
+}
+async function nominatimReverse(lat, lon){
+  const url = `${NOMINATIM_BASE}/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lon}`;
+  const res = await fetch(url, {headers:{'Accept':'application/json'}});
+  if(!res.ok) throw new Error('Could not resolve that location.');
+  return res.json();
+}
+
+function renderPromoReceiverResults(results){
+  const box = document.getElementById('promo-receiver-results');
+  if(!results.length){
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = results.map((r,i) => `
+    <div class="promo-result-row" data-idx="${i}" style="padding:10px 12px; font-size:13px; cursor:pointer; border-bottom:1px solid rgba(18,38,54,0.08);">${esc(r.display_name)}</div>
+  `).join('');
+  box.style.display = 'block';
+  box.querySelectorAll('.promo-result-row').forEach(row => {
+    row.addEventListener('mouseenter', () => row.style.background = 'var(--paper-dim)');
+    row.addEventListener('mouseleave', () => row.style.background = '');
+    row.addEventListener('click', () => {
+      const r = results[Number(row.dataset.idx)];
+      const parts = extractLocationParts(r.address || {});
+      promoReceiver = {...parts, displayName: r.display_name};
+      document.getElementById('promo-receiver-search').value = r.display_name;
+      document.getElementById('promo-r-city').value = parts.city;
+      document.getElementById('promo-r-state').value = parts.state;
+      document.getElementById('promo-r-pincode').value = parts.pincode;
+      box.style.display = 'none';
+      renderPromo();
+    });
+  });
+}
+
+document.getElementById('promo-receiver-search').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  clearTimeout(promoSearchDebounce);
+  if(q.length < 3){
+    document.getElementById('promo-receiver-results').style.display = 'none';
+    return;
+  }
+  promoSearchDebounce = setTimeout(async () => {
+    try{
+      const results = await nominatimSearch(q);
+      renderPromoReceiverResults(results);
+    } catch(err){
+      console.error(err);
+    }
+  }, 450);
+});
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('promo-receiver-search');
+  const box = document.getElementById('promo-receiver-results');
+  if(wrap && box && !wrap.contains(e.target) && !box.contains(e.target)) box.style.display = 'none';
+});
+
+// Manual edits to City/State/Pincode also recompute the zone, in case a search
+// result was imprecise and the person corrects it by hand.
+['promo-r-city','promo-r-state','promo-r-pincode'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    promoReceiver = {
+      city: document.getElementById('promo-r-city').value.trim(),
+      state: document.getElementById('promo-r-state').value.trim(),
+      pincode: document.getElementById('promo-r-pincode').value.trim(),
+      displayName: document.getElementById('promo-receiver-search').value.trim(),
+    };
+    renderPromo();
+  });
+});
+
+document.getElementById('promo-use-current-location').addEventListener('click', () => {
+  const hint = document.getElementById('promo-sender-hint');
+  if(!navigator.geolocation){
+    hint.textContent = 'Your browser does not support location access.';
+    return;
+  }
+  hint.textContent = 'Locating…';
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    try{
+      const r = await nominatimReverse(pos.coords.latitude, pos.coords.longitude);
+      const parts = extractLocationParts(r.address || {});
+      promoCurrentSender = {
+        name: 'Current Location',
+        addressLine: r.display_name || '',
+        city: parts.city, state: parts.state, pincode: parts.pincode,
+      };
+      renderPromoSenderDisplay();
+      hint.textContent = 'Using your current location as the sender.';
+      renderPromo();
+    } catch(err){
+      hint.textContent = err.message;
+    }
+  }, (err) => {
+    hint.textContent = 'Could not access your location: ' + err.message;
+  });
+});
+
+// Fixed geographic zone logic: A (same city) > B (same state) > C (both metro,
+// different city) > E (special destination state) > D (everything else).
+function detectPromoZone(sender, receiver){
+  if(!sender || !receiver || !sender.city || !receiver.city) return null;
+  const sameCity = normStr(sender.city) === normStr(receiver.city);
+  const sameState = sender.state && receiver.state && normStr(sender.state) === normStr(receiver.state);
+  const senderMetro = PP_METRO_CITIES.some(c => normStr(c) === normStr(sender.city));
+  const receiverMetro = PP_METRO_CITIES.some(c => normStr(c) === normStr(receiver.city));
+  const receiverSpecial = PP_SPECIAL_STATES.some(s => normStr(s) === normStr(receiver.state));
+  if(sameCity) return 'A';
+  if(sameState) return 'B';
+  if(senderMetro && receiverMetro) return 'C';
+  if(receiverSpecial) return 'E';
+  return 'D';
+}
+
+// Per the weight-entry rule: values under 1 are grams, 1.00+ are kilograms.
+function promoUnitWeightToKg(raw){
+  const v = Number(raw);
+  if(!v || v <= 0) return null;
+  return v < 1 ? (v / 1000) : v;
+}
+
+function renderPromo(){
+  const badge = document.getElementById('promo-zone-badge');
+  const priceEl = document.getElementById('promo-price');
+  const priceLabelEl = document.getElementById('promo-price-label');
+  const noteEl = document.getElementById('promo-note');
+  const bkBox = document.getElementById('promo-breakdown');
+  const bkTitle = document.getElementById('promo-breakdown-title');
+  const bkRows = document.getElementById('promo-breakdown-rows');
+  const boxDimsWrap = document.getElementById('promo-box-dims');
+
+  const qty = parseInt(document.getElementById('promo-qty').value) || 0;
+  const unitWeightRaw = document.getElementById('promo-unit-weight').value;
+  const unitWeightKg = promoUnitWeightToKg(unitWeightRaw);
+  const mode = document.getElementById('promo-mode').value;
+  const sender = promoCurrentSender;
+  const receiver = promoReceiver;
+
+  // Live g/kg hint next to the weight field
+  const hintEl = document.getElementById('promo-weight-hint');
+  if(unitWeightRaw !== '' && unitWeightKg !== null){
+    const v = Number(unitWeightRaw);
+    const shown = v < 1 ? `${(v*1000).toFixed(0)} g` : `${v.toFixed(2)} kg`;
+    hintEl.innerHTML = `Reading this as <strong>${shown}</strong> per product. Values under 1 are grams; 1.00+ are kilograms.`;
+  } else {
+    hintEl.innerHTML = 'Enter with 2 decimal points. Values under 1 are read as <strong>grams</strong> (e.g. 0.55 → 0.55 g); values 1.00 and above are read as <strong>kilograms</strong> (e.g. 1.55 → 1.55 kg).';
+  }
+
+  const zone = detectPromoZone(sender, receiver);
+  badge.textContent = zone ? `${PP_ZONE_INFO[zone].label} — ${PP_ZONE_INFO[zone].desc}` : 'Zone —';
+
+  if(!qty || !unitWeightKg || !mode || !zone){
+    priceEl.innerHTML = '—';
+    priceLabelEl.textContent = 'Price';
+    noteEl.textContent = 'Fill in the product details and delivery location to see a price.';
+    bkBox.style.display = 'none';
+    boxDimsWrap.style.display = 'none';
+    return;
+  }
+
+  const totalWeightKg = qty * unitWeightKg;
+
+  // Try a flat tier-table match first: smallest tier (for this mode) that can carry the total weight.
+  const candidateRows = PP_RATE_TABLE
+    .filter(r => r.mode === mode && r.minWeight >= totalWeightKg)
+    .sort((a,b) => a.minWeight - b.minWeight);
+
+  if(candidateRows.length){
+    boxDimsWrap.style.display = 'none';
+    const row = candidateRows[0];
+    const rate = row.zoneRates[zone] || {fwd:null, rto:null};
+    if(rate.fwd === null || rate.fwd === undefined){
+      priceEl.innerHTML = 'On request';
+      priceLabelEl.textContent = 'Price';
+      noteEl.textContent = CONTACT_NOTE + ' — no rate on file for this zone/tier.';
+      bkBox.style.display = 'none';
+      return;
+    }
+    priceEl.innerHTML = `<span class="cur">₹</span>${rate.fwd.toLocaleString('en-IN')}`;
+    priceLabelEl.textContent = 'Forward price (rate card)';
+    noteEl.textContent = `${qty} × ${(unitWeightKg*1000).toFixed(0)}g = ${totalWeightKg.toFixed(2)} kg total · ${mode} · tier ≤ ${row.minWeight} kg · excludes GST`;
+    bkBox.style.display = 'block';
+    bkTitle.textContent = 'Rate breakdown';
+    bkRows.innerHTML = `
+      <div class="bk-row"><span class="k">Forward</span><span class="v">${inr(rate.fwd)}</span></div>
+      <div class="bk-row"><span class="k">RTO (return to origin)</span><span class="v">${rate.rto === null ? 'N/A' : inr(rate.rto)}</span></div>
+      <div class="bk-row"><span class="k">Matched weight tier</span><span class="v">${row.minWeight} kg</span></div>
+    `;
+    return;
+  }
+
+  // No table tier is big enough — needs boxing. Ask for L×B×H, compute volumetric weight.
+  boxDimsWrap.style.display = 'block';
+  const l = Number(document.getElementById('promo-box-l').value);
+  const b = Number(document.getElementById('promo-box-b').value);
+  const h = Number(document.getElementById('promo-box-h').value);
+
+  if(!l || !b || !h){
+    priceEl.innerHTML = '—';
+    priceLabelEl.textContent = 'Price';
+    noteEl.textContent = `Total weight (${totalWeightKg.toFixed(2)} kg) exceeds the largest rate-card tier — enter box L×B×H to calculate a rate.`;
+    bkBox.style.display = 'none';
+    return;
+  }
+
+  const divisor = PP_BOX_RATES.volumeDivisor || 5000;
+  const volumetricWeight = (l*b*h) / divisor;
+  const chargeableWeight = Math.max(totalWeightKg, volumetricWeight);
+  const zoneBoxRate = (PP_BOX_RATES.zones && PP_BOX_RATES.zones[zone]) || {standard:0, express:0};
+  const standardPrice = chargeableWeight * zoneBoxRate.standard;
+  const expressPrice = chargeableWeight * zoneBoxRate.express;
+
+  priceEl.innerHTML = `<span class="cur">₹</span>${Math.round(standardPrice).toLocaleString('en-IN')}`;
+  priceLabelEl.textContent = 'Standard price (boxed, per chargeable kg)';
+  noteEl.textContent = `Chargeable weight ${chargeableWeight.toFixed(2)} kg (dead ${totalWeightKg.toFixed(2)} kg vs volumetric ${volumetricWeight.toFixed(2)} kg) · excludes GST`;
+  bkBox.style.display = 'block';
+  bkTitle.textContent = 'Boxed rate breakdown';
+  bkRows.innerHTML = `
+    <div class="bk-row"><span class="k">Dead weight (qty × unit weight)</span><span class="v">${totalWeightKg.toFixed(2)} kg</span></div>
+    <div class="bk-row"><span class="k">Volumetric weight (L×B×H ÷ ${divisor})</span><span class="v">${volumetricWeight.toFixed(2)} kg</span></div>
+    <div class="bk-row"><span class="k">Chargeable weight (higher of the two)</span><span class="v">${chargeableWeight.toFixed(2)} kg</span></div>
+    <div class="bk-row"><span class="k">Standard (₹${zoneBoxRate.standard}/kg)</span><span class="v">${inr(standardPrice)}</span></div>
+    <div class="bk-row"><span class="k">Express (₹${zoneBoxRate.express}/kg)</span><span class="v">${inr(expressPrice)}</span></div>
+  `;
+}
+['promo-qty','promo-unit-weight','promo-mode','promo-box-l','promo-box-b','promo-box-h'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderPromo);
+});
+
+/* =====================================================================
+   ADMIN PANEL
+===================================================================== */
+async function doAdminLogin(){
+  const u = document.getElementById('admin-username').value.trim();
+  const p = document.getElementById('admin-password').value;
+  const errEl = document.getElementById('admin-login-error');
+  const btn = document.getElementById('admin-login-btn');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Logging in…';
+  try{
+    const res = await apiFetch('/auth/login', {method:'POST', body: JSON.stringify({username:u, password:p})});
+    authToken = res.token;
+    adminLoggedInAs = res.username;
+    document.getElementById('admin-login-view').style.display = 'none';
+    document.getElementById('admin-management').style.display = 'block';
+    document.getElementById('admin-status-badge').textContent = 'Logged in as ' + adminLoggedInAs;
+    document.getElementById('admin-logout-btn').textContent = 'Log out (' + adminLoggedInAs + ')';
+    await loadAdminState();
+    renderAdminSubtabs();
+    renderAdminSubpanel();
+  } catch(err){
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login';
+  }
+}
+
+// Pulls the full admin snapshot (same data as the public dashboard, plus the
+// user list) so the Admin Panel always reflects what's actually saved.
+async function loadAdminState(){
+  const d = await apiFetch('/admin/state');
+  MP_PACKAGING = d.mpPackaging || [];
+  MP_SHIPPING = d.mpShipping || [];
+  MP_RATES = d.mpRates || {};
+  SP_SHIPPING = d.spShipping || [];
+  SP_ZONES = d.spZones || [];
+  SP_ZONE_RATES = d.spZoneRates || {};
+  SP_PACKAGING = d.spPackaging || [];
+  DT_SHIPPING = d.dtShipping || [];
+  PP_RATE_TABLE = d.ppRateTable || [];
+  PP_METRO_CITIES = d.ppMetroCities || [];
+  PP_SPECIAL_STATES = d.ppSpecialStates || [];
+  PP_BOX_RATES = d.ppBoxRates || {volumeDivisor:5000, zones:{}};
+  PP_SENDER_ADDRESS = d.ppSenderAddress || {name:'', addressLine:'', city:'', state:'', pincode:''};
+  promoCurrentSender = {...PP_SENDER_ADDRESS};
+  USERS = d.users || [];
+  renderZoneList();
+  rebuildAllSelects();
+}
+
+function doAdminLogout(){
+  authToken = null;
+  adminLoggedInAs = null;
+  document.getElementById('admin-username').value = '';
+  document.getElementById('admin-password').value = '';
+  document.getElementById('admin-login-view').style.display = 'block';
+  document.getElementById('admin-management').style.display = 'none';
+  document.getElementById('admin-status-badge').textContent = 'Logged out';
+}
+
+document.getElementById('admin-login-btn').addEventListener('click', doAdminLogin);
+document.getElementById('admin-password').addEventListener('keydown', e => { if(e.key === 'Enter') doAdminLogin(); });
+document.getElementById('admin-logout-btn').addEventListener('click', doAdminLogout);
+
+const ADMIN_TABS = [
+  {id:'mp', label:'Multiple Point Delivery'},
+  {id:'sp', label:'Single Point Delivery'},
+  {id:'dt', label:'Edit Delivery Timelines'},
+  {id:'pp', label:'Promotional Product'},
+  {id:'users', label:'Manage Users'},
+];
+
+function renderAdminSubtabs(){
+  document.getElementById('admin-subtabs').innerHTML = ADMIN_TABS.map(t => `
+    <button type="button" class="admin-subtab-btn ${t.id === adminActiveTab ? 'active' : ''}" onclick="switchAdminTab('${t.id}')">${esc(t.label)}</button>
+  `).join('');
+}
+function switchAdminTab(id){
+  adminActiveTab = id;
+  renderAdminSubtabs();
+  renderAdminSubpanel();
+}
+
+function renderAdminSubpanel(){
+  const el = document.getElementById('admin-subpanel');
+  if(adminActiveTab === 'mp') el.innerHTML = mpAdminHtml();
+  else if(adminActiveTab === 'sp') el.innerHTML = spAdminHtml();
+  else if(adminActiveTab === 'dt') el.innerHTML = dtAdminHtml();
+  else if(adminActiveTab === 'pp') el.innerHTML = ppAdminHtml();
+  else el.innerHTML = usersAdminHtml();
+
+  if(adminActiveTab === 'sp'){
+    renderCartonDraftTable();
+    spExpandedIdx.forEach(i => renderUpdTable(i));
+  }
+}
+
+/* ---------------- 1. MULTIPLE POINT DELIVERY admin ---------------- */
+function mpAdminHtml(){
+  return `
+    <div class="admin-section">
+      <h3>Add Packaging Type</h3>
+      <p class="admin-desc">Adds a flat per-box rate for each Multiple Point shipping mode below.</p>
+      <div class="admin-row">
+        <div class="af"><label>Packaging name</label><input type="text" id="mp-np-name" placeholder="e.g. Wooden Crate"></div>
+        ${MP_SHIPPING.map((m,i) => `<div class="af"><label>${esc(m)} rate (₹)</label><input type="number" id="mp-np-rate-${i}" placeholder="e.g. 300"></div>`).join('') || '<div class="hint">Add a shipping mode first to enter rates.</div>'}
+        <button class="btn-primary" onclick="mpAddPackaging()">Add</button>
+      </div>
+      <div class="chip-list">
+        ${MP_PACKAGING.map(p => `<div class="chip">${esc(p)}<button onclick="mpDeletePackaging('${esc(p)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No packaging types yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Add Shipping Mode</h3>
+      <p class="admin-desc">Shipping modes used for Multiple Point Delivery only.</p>
+      <div class="admin-row">
+        <div class="af"><label>Shipping mode name</label><input type="text" id="mp-ns-name" placeholder="e.g. Standard Shipping"></div>
+        <button class="btn-primary" onclick="mpAddShipping()">Add</button>
+      </div>
+      <div class="chip-list">
+        ${MP_SHIPPING.map(m => `<div class="chip">${esc(m)}<button onclick="mpDeleteShipping('${esc(m)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No shipping modes yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Update Rates</h3>
+      <p class="admin-desc">Flat per-box rate by packaging type and shipping mode. Leave blank for "on request".</p>
+      ${MP_PACKAGING.length && MP_SHIPPING.length ? `
+        <table class="admin-table">
+          <thead><tr><th>Packaging type</th>${MP_SHIPPING.map(m => `<th>${esc(m)}</th>`).join('')}<th></th></tr></thead>
+          <tbody>
+            ${MP_PACKAGING.map((p,pi) => `
+              <tr>
+                <td>${esc(p)}</td>
+                ${MP_SHIPPING.map((m,mi) => {
+                  const v = (MP_RATES[p] && MP_RATES[p][m] !== undefined && MP_RATES[p][m] !== null) ? MP_RATES[p][m] : '';
+                  return `<td><input type="number" id="mp-rate-${pi}-${mi}" value="${v}"></td>`;
+                }).join('')}
+                <td><button type="button" class="btn-ghost-danger" onclick="mpDeletePackaging('${esc(p)}')" title="Remove packaging type">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:14px;"><button class="btn-primary" onclick="mpSaveRates()">Save Rates</button></div>
+      ` : `<p class="hint" style="margin:0;">Add at least one packaging type and one shipping mode above first.</p>`}
+    </div>
+  `;
+}
+async function mpAddPackaging(){
+  const name = document.getElementById('mp-np-name').value.trim();
+  if(!name){ alert('Enter a packaging name.'); return; }
+  const rates = {};
+  MP_SHIPPING.forEach((m,i) => {
+    const raw = document.getElementById('mp-np-rate-' + i).value;
+    rates[m] = raw === '' ? null : Number(raw);
+  });
+  try{
+    await apiFetch('/admin/mp/packaging', {method:'POST', body: JSON.stringify({name, rates})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function mpDeletePackaging(name){
+  try{
+    await apiFetch('/admin/mp/packaging/' + encodeURIComponent(name), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function mpAddShipping(){
+  const name = document.getElementById('mp-ns-name').value.trim();
+  if(!name){ alert('Enter a shipping mode name.'); return; }
+  try{
+    await apiFetch('/admin/mp/shipping', {method:'POST', body: JSON.stringify({name})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function mpDeleteShipping(name){
+  try{
+    await apiFetch('/admin/mp/shipping/' + encodeURIComponent(name), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function mpSaveRates(){
+  const rates = {};
+  MP_PACKAGING.forEach((p,pi) => {
+    rates[p] = {};
+    MP_SHIPPING.forEach((m,mi) => {
+      const inp = document.getElementById(`mp-rate-${pi}-${mi}`);
+      if(!inp) return;
+      rates[p][m] = inp.value === '' ? null : Number(inp.value);
+    });
+  });
+  try{
+    await apiFetch('/admin/mp/rates', {method:'PUT', body: JSON.stringify({rates})});
+    await loadAdminState();
+    renderAdminSubpanel();
+    alert('Multiple Point rates saved.');
+  } catch(err){ alert(err.message); }
+}
+
+/* ---------------- 2. SINGLE POINT DELIVERY admin ---------------- */
+let cbDraftRows = [{size:'', l:'', b:'', h:''}];
+let spExpandedIdx = new Set(); // indices into SP_PACKAGING currently expanded in "Update Packaging Type"
+let spEditDrafts = {}; // spEditDrafts[i] = working copy of SP_PACKAGING[i].packSizes while editing
+
+function spAdminHtml(){
+  return `
+    <div class="admin-section">
+      <h3>Add Shipping Mode</h3>
+      <p class="admin-desc">Each Single Point shipping mode needs its own Volume Divisor, used to turn carton L×B×H into volumetric weight.</p>
+      <div class="admin-row">
+        <div class="af"><label>Shipping mode name</label><input type="text" id="sp-ns-name" oninput="spShipNameChanged()" placeholder="e.g. Standard Shipping"></div>
+        <div class="af" id="sp-ns-divisor-wrap" style="display:none;">
+          <label>Volume Divisor (4-digit number)</label>
+          <input type="number" id="sp-ns-divisor" min="1000" max="9999" placeholder="e.g. 4400">
+        </div>
+        <button class="btn-primary" onclick="spAddShipping()">Add</button>
+      </div>
+      <div class="chip-list">
+        ${SP_SHIPPING.map(s => `<div class="chip">${esc(s.name)} <span class="hint" style="margin:0;">(÷${s.volumeDivisor})</span><button onclick="spDeleteShipping('${esc(s.name)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No shipping modes yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Add Shipping Charge (per KG)</h3>
+      <p class="admin-desc">Per-kg rate used for carton consolidation (4+ hampers), by destination zone and shipping mode.</p>
+      ${SP_SHIPPING.length ? `
+        <table class="admin-table">
+          <thead><tr><th>Zone</th>${SP_SHIPPING.map(s => `<th>${esc(s.name)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${SP_ZONES.map((z,zi) => `
+              <tr>
+                <td>${esc(z)}</td>
+                ${SP_SHIPPING.map((s,si) => {
+                  const v = (SP_ZONE_RATES[z] && SP_ZONE_RATES[z][s.name] !== undefined) ? SP_ZONE_RATES[z][s.name] : '';
+                  return `<td><input type="number" id="sp-zr-${zi}-${si}" value="${v}"></td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:14px;"><button class="btn-primary" onclick="spSaveZoneRates()">Save Shipping Charges</button></div>
+      ` : `<p class="hint" style="margin:0;">Add a shipping mode above first.</p>`}
+    </div>
+
+    <div class="admin-section">
+      <h3>Add Packaging Type</h3>
+      <p class="admin-desc">Single Point packaging types are carton boxes — define one below with its pack sizes and dimensions. If you include a pack size of 1, this packaging type is also added to Multiple Point Delivery's Update Rates table automatically (with the shipping charge left blank for you to fill in there).</p>
+      <div class="admin-row">
+        <div class="af"><label>Carton box / packaging name</label><input type="text" id="sp-cb-name" placeholder="e.g. 7*7"></div>
+      </div>
+      <h4 style="margin-bottom:8px;">Add Carton Box — pack sizes</h4>
+      <table class="admin-table">
+        <thead id="cb-draft-thead"></thead>
+        <tbody id="cb-draft-tbody"></tbody>
+      </table>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" onclick="cbAddRow()">+ Add Pack Size Row</button>
+        <button type="button" class="btn-primary" onclick="saveCartonBox()">Save Carton Box</button>
+      </div>
+      <div class="chip-list" style="margin-top:16px;">
+        ${SP_PACKAGING.map(p => `<div class="chip">${esc(p.name)} <span class="hint" style="margin:0;">(${p.packSizes.length} pack size${p.packSizes.length===1?'':'s'})</span><button onclick="deleteCartonBox('${esc(p.name)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No carton boxes yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Update Packaging Type</h3>
+      <p class="admin-desc">Every packaging type added above, listed here. Open a row to edit its pack sizes, L×B×H, and see each mode's Vol Weight recalculate live.</p>
+      ${SP_PACKAGING.length ? SP_PACKAGING.map((p,i) => `
+        <div style="border:1px solid rgba(18,38,54,0.12); border-radius:8px; margin-bottom:10px; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 14px; background:var(--paper-dim); cursor:pointer;" onclick="spToggleEdit(${i})">
+            <span style="font-weight:600; font-size:13.5px;">${esc(p.name)} <span class="hint" style="margin:0;">(${p.packSizes.length} pack size${p.packSizes.length===1?'':'s'})</span></span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.04em;">${spExpandedIdx.has(i) ? '▴ CLOSE' : '✎ EDIT'}</span>
+          </div>
+          ${spExpandedIdx.has(i) ? `
+            <div style="padding:14px;">
+              <table class="admin-table">
+                <thead id="upd-thead-${i}"></thead>
+                <tbody id="upd-tbody-${i}"></tbody>
+              </table>
+              <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button type="button" class="btn-secondary" onclick="updAddRow(${i})">+ Add Pack Size Row</button>
+                <button type="button" class="btn-primary" onclick="updSave(${i})">Save</button>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `).join('') : '<p class="hint" style="margin:0;">No packaging types yet — add one above.</p>'}
+    </div>
+  `;
+}
+
+function spShipNameChanged(){
+  const v = document.getElementById('sp-ns-name').value.trim();
+  document.getElementById('sp-ns-divisor-wrap').style.display = v ? 'block' : 'none';
+}
+async function spAddShipping(){
+  const name = document.getElementById('sp-ns-name').value.trim();
+  const divisorRaw = document.getElementById('sp-ns-divisor').value;
+  if(!name){ alert('Enter a shipping mode name.'); return; }
+  const divisor = Number(divisorRaw);
+  if(!divisor || divisor < 1000 || divisor > 9999){ alert('Volume Divisor must be a 4-digit number (1000–9999).'); return; }
+  try{
+    await apiFetch('/admin/sp/shipping', {method:'POST', body: JSON.stringify({name, volumeDivisor:divisor})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function spDeleteShipping(name){
+  try{
+    await apiFetch('/admin/sp/shipping/' + encodeURIComponent(name), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function spSaveZoneRates(){
+  const zoneRates = {};
+  SP_ZONES.forEach((z,zi) => {
+    zoneRates[z] = {};
+    SP_SHIPPING.forEach((s,si) => {
+      const inp = document.getElementById(`sp-zr-${zi}-${si}`);
+      if(!inp) return;
+      zoneRates[z][s.name] = inp.value === '' ? 0 : Number(inp.value);
+    });
+  });
+  try{
+    await apiFetch('/admin/sp/zone-rates', {method:'PUT', body: JSON.stringify({zoneRates})});
+    await loadAdminState();
+    renderAdminSubpanel();
+    alert('Shipping charges saved.');
+  } catch(err){ alert(err.message); }
+}
+
+function renderCartonDraftTable(){
+  const theadEl = document.getElementById('cb-draft-thead');
+  const tbodyEl = document.getElementById('cb-draft-tbody');
+  if(!theadEl || !tbodyEl) return;
+  theadEl.innerHTML = `<tr><th>Pack Size (boxes/carton)</th><th>L (cm)</th><th>B (cm)</th><th>H (cm)</th>${SP_SHIPPING.map(s => `<th>${esc(firstWord(s.name))} Vol Weight</th>`).join('')}<th></th></tr>`;
+  tbodyEl.innerHTML = cbDraftRows.map((row,i) => `
+    <tr>
+      <td><input type="number" id="cb-row-size-${i}" value="${row.size}" placeholder="e.g. 1" oninput="cbUpdateRow(${i})"></td>
+      <td><input type="number" id="cb-row-l-${i}" value="${row.l}" placeholder="L" oninput="cbUpdateRow(${i})"></td>
+      <td><input type="number" id="cb-row-b-${i}" value="${row.b}" placeholder="B" oninput="cbUpdateRow(${i})"></td>
+      <td><input type="number" id="cb-row-h-${i}" value="${row.h}" placeholder="H" oninput="cbUpdateRow(${i})"></td>
+      ${SP_SHIPPING.map((s,si) => `<td id="cb-vw-${i}-${si}" class="hint" style="margin:0;">—</td>`).join('')}
+      <td>${cbDraftRows.length > 1 ? `<button type="button" class="btn-ghost-danger" onclick="cbRemoveRow(${i})">×</button>` : ''}</td>
+    </tr>
+  `).join('');
+  cbDraftRows.forEach((_,i) => cbUpdateRow(i, true));
+}
+function cbUpdateRow(i, skipStore){
+  const row = cbDraftRows[i];
+  if(!row) return;
+  if(!skipStore){
+    row.size = document.getElementById('cb-row-size-'+i).value;
+    row.l = document.getElementById('cb-row-l-'+i).value;
+    row.b = document.getElementById('cb-row-b-'+i).value;
+    row.h = document.getElementById('cb-row-h-'+i).value;
+  }
+  const l = Number(row.l) || 0, b = Number(row.b) || 0, h = Number(row.h) || 0;
+  SP_SHIPPING.forEach((s,si) => {
+    const cell = document.getElementById(`cb-vw-${i}-${si}`);
+    if(!cell) return;
+    cell.textContent = (l && b && h && s.volumeDivisor) ? (l*b*h/s.volumeDivisor).toFixed(3) : '—';
+  });
+}
+function cbAddRow(){
+  cbDraftRows.push({size:'', l:'', b:'', h:''});
+  renderCartonDraftTable();
+}
+function cbRemoveRow(i){
+  cbDraftRows.splice(i,1);
+  renderCartonDraftTable();
+}
+async function saveCartonBox(){
+  const name = document.getElementById('sp-cb-name').value.trim();
+  if(!name){ alert('Enter a carton box name.'); return; }
+  const packSizes = [];
+  for(const row of cbDraftRows){
+    if(row.size === '' && row.l === '' && row.b === '' && row.h === '') continue;
+    const size = Number(row.size), l = Number(row.l), b = Number(row.b), h = Number(row.h);
+    if(!size || !l || !b || !h){ alert('Each pack size row needs a Pack Size, L, B and H.'); return; }
+    packSizes.push({size, l, b, h});
+  }
+  if(packSizes.length === 0){ alert('Add at least one pack size row.'); return; }
+
+  try{
+    // The backend auto-adds this to Multiple Point Delivery's Update Rates
+    // table (with blank rates) if any pack size here is 1 — see backend/routes/admin.js.
+    await apiFetch('/admin/sp/packaging', {method:'POST', body: JSON.stringify({name, packSizes})});
+    cbDraftRows = [{size:'', l:'', b:'', h:''}];
+    document.getElementById('sp-cb-name').value = '';
+    spExpandedIdx.clear();
+    spEditDrafts = {};
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function deleteCartonBox(name){
+  try{
+    await apiFetch('/admin/sp/packaging/' + encodeURIComponent(name), {method:'DELETE'});
+    spExpandedIdx.clear();
+    spEditDrafts = {};
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+/* ---- Update Packaging Type: expand-to-edit an existing carton box's pack sizes ---- */
+function spToggleEdit(i){
+  if(spExpandedIdx.has(i)){
+    spExpandedIdx.delete(i);
+    delete spEditDrafts[i];
+  } else {
+    spExpandedIdx.add(i);
+    spEditDrafts[i] = SP_PACKAGING[i].packSizes.map(ps => ({...ps}));
+  }
+  renderAdminSubpanel();
+}
+function renderUpdTable(i){
+  const thead = document.getElementById('upd-thead-' + i);
+  const tbody = document.getElementById('upd-tbody-' + i);
+  if(!thead || !tbody) return;
+  const rows = spEditDrafts[i];
+  thead.innerHTML = `<tr><th>Pack Size</th><th>L (cm)</th><th>B (cm)</th><th>H (cm)</th>${SP_SHIPPING.map(s => `<th>${esc(firstWord(s.name))} Vol Weight</th>`).join('')}<th></th></tr>`;
+  tbody.innerHTML = rows.map((row,ri) => `
+    <tr>
+      <td><input type="number" id="upd-size-${i}-${ri}" value="${row.size}" oninput="updUpdateRow(${i},${ri})"></td>
+      <td><input type="number" id="upd-l-${i}-${ri}" value="${row.l}" oninput="updUpdateRow(${i},${ri})"></td>
+      <td><input type="number" id="upd-b-${i}-${ri}" value="${row.b}" oninput="updUpdateRow(${i},${ri})"></td>
+      <td><input type="number" id="upd-h-${i}-${ri}" value="${row.h}" oninput="updUpdateRow(${i},${ri})"></td>
+      ${SP_SHIPPING.map((s,si) => `<td id="upd-vw-${i}-${ri}-${si}" class="hint" style="margin:0;">—</td>`).join('')}
+      <td>${rows.length > 1 ? `<button type="button" class="btn-ghost-danger" onclick="updRemoveRow(${i},${ri})">×</button>` : ''}</td>
+    </tr>
+  `).join('');
+  rows.forEach((_,ri) => updUpdateRow(i, ri, true));
+}
+function updUpdateRow(i, ri, skipStore){
+  const row = spEditDrafts[i] && spEditDrafts[i][ri];
+  if(!row) return;
+  if(!skipStore){
+    row.size = document.getElementById(`upd-size-${i}-${ri}`).value;
+    row.l = document.getElementById(`upd-l-${i}-${ri}`).value;
+    row.b = document.getElementById(`upd-b-${i}-${ri}`).value;
+    row.h = document.getElementById(`upd-h-${i}-${ri}`).value;
+  }
+  const l = Number(row.l) || 0, b = Number(row.b) || 0, h = Number(row.h) || 0;
+  SP_SHIPPING.forEach((s,si) => {
+    const cell = document.getElementById(`upd-vw-${i}-${ri}-${si}`);
+    if(!cell) return;
+    cell.textContent = (l && b && h && s.volumeDivisor) ? (l*b*h/s.volumeDivisor).toFixed(3) : '—';
+  });
+}
+function updAddRow(i){
+  spEditDrafts[i].push({size:'', l:'', b:'', h:''});
+  renderUpdTable(i);
+}
+function updRemoveRow(i, ri){
+  spEditDrafts[i].splice(ri, 1);
+  renderUpdTable(i);
+}
+async function updSave(i){
+  const rows = spEditDrafts[i];
+  const cleaned = [];
+  for(const row of rows){
+    if(row.size === '' && row.l === '' && row.b === '' && row.h === '') continue;
+    const size = Number(row.size), l = Number(row.l), b = Number(row.b), h = Number(row.h);
+    if(!size || !l || !b || !h){ alert('Each pack size row needs a Pack Size, L, B and H.'); return; }
+    cleaned.push({size, l, b, h});
+  }
+  if(cleaned.length === 0){ alert('Add at least one pack size row.'); return; }
+  const name = SP_PACKAGING[i].name;
+  try{
+    await apiFetch('/admin/sp/packaging/' + encodeURIComponent(name), {method:'PUT', body: JSON.stringify({packSizes: cleaned})});
+    spExpandedIdx.delete(i);
+    delete spEditDrafts[i];
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+/* ---------------- 3. EDIT DELIVERY TIMELINES admin ---------------- */
+function dtAdminHtml(){
+  return `
+    <div class="admin-section">
+      <h3>Add Shipping Mode</h3>
+      <p class="admin-desc">Controls the TAT chip text and business-day window shown in the Delivery Date Calculator.</p>
+      <div class="admin-row">
+        <div class="af"><label>Shipping mode name</label><input type="text" id="dt-name" placeholder="e.g. Standard Shipping"></div>
+        <div class="af"><label>TAT label</label><input type="text" id="dt-tat" placeholder="e.g. 4–6 business days"></div>
+        <div class="af"><label>Earliest (business days)</label><input type="number" min="1" id="dt-early" placeholder="4"></div>
+        <div class="af"><label>Latest (business days)</label><input type="number" min="1" id="dt-late" placeholder="6"></div>
+        <button class="btn-primary" onclick="dtAddShipping()">Add</button>
+      </div>
+      ${DT_SHIPPING.length ? `
+        <table class="admin-table">
+          <thead><tr><th>Shipping mode</th><th>TAT label</th><th>Earliest</th><th>Latest</th><th></th></tr></thead>
+          <tbody>
+            ${DT_SHIPPING.map((s,i) => `
+              <tr>
+                <td>${esc(s.name)}</td>
+                <td><input type="text" id="dt-tat-${i}" value="${esc(s.tat)}"></td>
+                <td><input type="number" min="1" id="dt-early-${i}" value="${s.earlyDays}"></td>
+                <td><input type="number" min="1" id="dt-late-${i}" value="${s.lateDays}"></td>
+                <td><button class="btn-ghost-danger" onclick="dtDeleteShipping('${esc(s.name)}')">Remove</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:14px;"><button class="btn-primary" onclick="dtSaveShipping()">Save Timelines</button></div>
+      ` : `<p class="hint" style="margin:0;">No shipping modes yet.</p>`}
+    </div>
+  `;
+}
+async function dtAddShipping(){
+  const name = document.getElementById('dt-name').value.trim();
+  const tat = document.getElementById('dt-tat').value.trim();
+  const early = Number(document.getElementById('dt-early').value);
+  const late = Number(document.getElementById('dt-late').value);
+  if(!name){ alert('Enter a shipping mode name.'); return; }
+  if(!tat){ alert('Enter a TAT label.'); return; }
+  if(!early || !late){ alert('Enter earliest and latest business-day values.'); return; }
+  try{
+    await apiFetch('/admin/timelines', {method:'POST', body: JSON.stringify({name, tat, earlyDays:early, lateDays:late})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function dtDeleteShipping(name){
+  try{
+    await apiFetch('/admin/timelines/' + encodeURIComponent(name), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function dtSaveShipping(){
+  try{
+    await Promise.all(DT_SHIPPING.map((s,i) => {
+      const tatInp = document.getElementById('dt-tat-' + i);
+      const earlyInp = document.getElementById('dt-early-' + i);
+      const lateInp = document.getElementById('dt-late-' + i);
+      if(!tatInp) return Promise.resolve();
+      return apiFetch('/admin/timelines/' + encodeURIComponent(s.name), {
+        method:'PUT',
+        body: JSON.stringify({tat: tatInp.value, earlyDays: Number(earlyInp.value) || 1, lateDays: Number(lateInp.value) || 1})
+      });
+    }));
+    await loadAdminState();
+    renderAdminSubpanel();
+    alert('Delivery timelines saved.');
+  } catch(err){ alert(err.message); }
+}
+
+/* ---------------- 5. PROMOTIONAL PRODUCT admin ---------------- */
+const PP_ZONE_IDS = ['A','B','C','D','E'];
+
+function ppAdminHtml(){
+  return `
+    <div class="admin-section">
+      <h3>Sender Address</h3>
+      <p class="admin-desc">The fixed dispatch address used for zone detection (customers can still override it with "Use My Current Location" on the Promotional Product tab).</p>
+      <div class="admin-row">
+        <div class="af"><label>Company / sender name</label><input type="text" id="pp-sa-name" value="${esc(PP_SENDER_ADDRESS.name||'')}"></div>
+        <div class="af" style="flex:2 1 260px;"><label>Address</label><input type="text" id="pp-sa-address" value="${esc(PP_SENDER_ADDRESS.addressLine||'')}"></div>
+      </div>
+      <div class="admin-row">
+        <div class="af"><label>City</label><input type="text" id="pp-sa-city" value="${esc(PP_SENDER_ADDRESS.city||'')}"></div>
+        <div class="af"><label>State</label><input type="text" id="pp-sa-state" value="${esc(PP_SENDER_ADDRESS.state||'')}"></div>
+        <div class="af"><label>Pincode</label><input type="text" id="pp-sa-pincode" value="${esc(PP_SENDER_ADDRESS.pincode||'')}"></div>
+        <button class="btn-primary" onclick="ppSaveSenderAddress()">Save Sender Address</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Metro Cities</h3>
+      <p class="admin-desc">Cities treated as "metro" for Zone C (Metro to Metro) — applies when both sender and receiver cities are in this list.</p>
+      <div class="admin-row">
+        <div class="af"><label>City name</label><input type="text" id="pp-metro-name" placeholder="e.g. Pune"></div>
+        <button class="btn-primary" onclick="ppAddMetroCity()">Add</button>
+      </div>
+      <div class="chip-list">
+        ${PP_METRO_CITIES.map(c => `<div class="chip">${esc(c)}<button onclick="ppDeleteMetroCity('${esc(c)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No metro cities yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Special Destination States (Zone E)</h3>
+      <p class="admin-desc">States/UTs (North East, J&amp;K, and other special states) that always map to Zone E, regardless of sender state.</p>
+      <div class="admin-row">
+        <div class="af"><label>State name</label><input type="text" id="pp-special-name" placeholder="e.g. Nagaland"></div>
+        <button class="btn-primary" onclick="ppAddSpecialState()">Add</button>
+      </div>
+      <div class="chip-list">
+        ${PP_SPECIAL_STATES.map(s => `<div class="chip">${esc(s)}<button onclick="ppDeleteSpecialState('${esc(s)}')">×</button></div>`).join('') || '<span class="hint" style="margin:0;">No special states yet.</span>'}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>Update Rates — Weight Tier Table</h3>
+      <p class="admin-desc">Each row is a Mode + Min Weight tier. A customer's total order weight (qty × unit weight) is matched to the smallest tier that covers it, for their detected zone. Leave a rate blank for "on request".</p>
+      <div class="admin-row">
+        <div class="af"><label>Mode</label><input type="text" id="pp-row-mode" placeholder="e.g. Air"></div>
+        <div class="af"><label>Min Weight (kg)</label><input type="number" step="0.01" min="0" id="pp-row-minweight" placeholder="e.g. 0.5"></div>
+        <button class="btn-primary" onclick="ppAddRateRow()">Add Row</button>
+      </div>
+      ${PP_RATE_TABLE.length ? `
+        <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Mode</th><th>Min Wt (kg)</th>
+              ${PP_ZONE_IDS.map(z => `<th colspan="2">${esc(PP_ZONE_INFO[z].label)}<br><span class="hint" style="margin:0;">${esc(PP_ZONE_INFO[z].desc)}</span></th>`).join('')}
+              <th></th>
+            </tr>
+            <tr>
+              <th></th><th></th>
+              ${PP_ZONE_IDS.map(() => `<th>Fwd</th><th>RTO</th>`).join('')}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${PP_RATE_TABLE.map(row => `
+              <tr>
+                <td><input type="text" id="pp-mode-${row.id}" value="${esc(row.mode)}" style="min-width:70px;"></td>
+                <td><input type="number" step="0.01" id="pp-mw-${row.id}" value="${row.minWeight}" style="min-width:70px;"></td>
+                ${PP_ZONE_IDS.map(z => {
+                  const rt = row.zoneRates[z] || {fwd:null, rto:null};
+                  return `
+                    <td><input type="number" id="pp-fwd-${row.id}-${z}" value="${rt.fwd === null ? '' : rt.fwd}" style="min-width:60px;"></td>
+                    <td><input type="number" id="pp-rto-${row.id}-${z}" value="${rt.rto === null ? '' : rt.rto}" style="min-width:60px;"></td>
+                  `;
+                }).join('')}
+                <td><button type="button" class="btn-ghost-danger" onclick="ppDeleteRateRow('${row.id}')">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+        <div style="margin-top:14px;"><button class="btn-primary" onclick="ppSaveRateRows()">Save Rate Table</button></div>
+      ` : `<p class="hint" style="margin:0;">No rate rows yet — add one above.</p>`}
+    </div>
+
+    <div class="admin-section">
+      <h3>Box Rates (Standard / Express, per chargeable kg)</h3>
+      <p class="admin-desc">Used once an order's total weight exceeds every tier above — chargeable weight is the higher of dead weight and volumetric weight (L×B×H ÷ Volume Divisor).</p>
+      <div class="admin-row">
+        <div class="af"><label>Volume Divisor (4-digit number)</label><input type="number" min="1000" max="9999" id="pp-box-divisor" value="${PP_BOX_RATES.volumeDivisor || 5000}"></div>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>Zone</th><th>Standard (₹/kg)</th><th>Express (₹/kg)</th></tr></thead>
+        <tbody>
+          ${PP_ZONE_IDS.map(z => {
+            const zr = (PP_BOX_RATES.zones && PP_BOX_RATES.zones[z]) || {standard:0, express:0};
+            return `
+              <tr>
+                <td>${esc(PP_ZONE_INFO[z].label)} <span class="hint" style="margin:0;">(${esc(PP_ZONE_INFO[z].desc)})</span></td>
+                <td><input type="number" id="pp-box-std-${z}" value="${zr.standard}"></td>
+                <td><input type="number" id="pp-box-exp-${z}" value="${zr.express}"></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:14px;"><button class="btn-primary" onclick="ppSaveBoxRates()">Save Box Rates</button></div>
+    </div>
+  `;
+}
+
+async function ppSaveSenderAddress(){
+  const name = document.getElementById('pp-sa-name').value.trim();
+  const addressLine = document.getElementById('pp-sa-address').value.trim();
+  const city = document.getElementById('pp-sa-city').value.trim();
+  const state = document.getElementById('pp-sa-state').value.trim();
+  const pincode = document.getElementById('pp-sa-pincode').value.trim();
+  if(!name || !addressLine || !city || !state || !pincode){ alert('All sender address fields are required.'); return; }
+  try{
+    await apiFetch('/admin/pp/sender-address', {method:'PUT', body: JSON.stringify({name, addressLine, city, state, pincode})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+async function ppAddMetroCity(){
+  const city = document.getElementById('pp-metro-name').value.trim();
+  if(!city){ alert('Enter a city name.'); return; }
+  try{
+    await apiFetch('/admin/pp/metro-cities', {method:'POST', body: JSON.stringify({city})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function ppDeleteMetroCity(city){
+  try{
+    await apiFetch('/admin/pp/metro-cities/' + encodeURIComponent(city), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+async function ppAddSpecialState(){
+  const state = document.getElementById('pp-special-name').value.trim();
+  if(!state){ alert('Enter a state name.'); return; }
+  try{
+    await apiFetch('/admin/pp/special-states', {method:'POST', body: JSON.stringify({state})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function ppDeleteSpecialState(state){
+  try{
+    await apiFetch('/admin/pp/special-states/' + encodeURIComponent(state), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+async function ppAddRateRow(){
+  const mode = document.getElementById('pp-row-mode').value.trim();
+  const minWeight = Number(document.getElementById('pp-row-minweight').value);
+  if(!mode){ alert('Enter a mode name.'); return; }
+  if(!minWeight || minWeight <= 0){ alert('Enter a positive Min Weight.'); return; }
+  try{
+    await apiFetch('/admin/pp/rate-rows', {method:'POST', body: JSON.stringify({mode, minWeight, zoneRates:{}})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function ppDeleteRateRow(id){
+  try{
+    await apiFetch('/admin/pp/rate-rows/' + encodeURIComponent(id), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function ppSaveRateRows(){
+  try{
+    await Promise.all(PP_RATE_TABLE.map(row => {
+      const modeInp = document.getElementById('pp-mode-' + row.id);
+      if(!modeInp) return Promise.resolve();
+      const mode = modeInp.value.trim();
+      const minWeight = Number(document.getElementById('pp-mw-' + row.id).value);
+      const zoneRates = {};
+      PP_ZONE_IDS.forEach(z => {
+        const fwdV = document.getElementById(`pp-fwd-${row.id}-${z}`).value;
+        const rtoV = document.getElementById(`pp-rto-${row.id}-${z}`).value;
+        zoneRates[z] = {
+          fwd: fwdV === '' ? null : Number(fwdV),
+          rto: rtoV === '' ? null : Number(rtoV),
+        };
+      });
+      return apiFetch('/admin/pp/rate-rows/' + encodeURIComponent(row.id), {
+        method:'PUT', body: JSON.stringify({mode, minWeight, zoneRates})
+      });
+    }));
+    await loadAdminState();
+    renderAdminSubpanel();
+    alert('Promotional Product rate table saved.');
+  } catch(err){ alert(err.message); }
+}
+
+async function ppSaveBoxRates(){
+  const volumeDivisor = Number(document.getElementById('pp-box-divisor').value);
+  const zones = {};
+  PP_ZONE_IDS.forEach(z => {
+    zones[z] = {
+      standard: Number(document.getElementById('pp-box-std-' + z).value) || 0,
+      express: Number(document.getElementById('pp-box-exp-' + z).value) || 0,
+    };
+  });
+  try{
+    await apiFetch('/admin/pp/box-rates', {method:'PUT', body: JSON.stringify({volumeDivisor, zones})});
+    await loadAdminState();
+    renderAdminSubpanel();
+    alert('Box rates saved.');
+  } catch(err){ alert(err.message); }
+}
+
+/* ---------------- 4. MANAGE USERS admin ---------------- */
+function usersAdminHtml(){
+  return `
+    <div class="admin-section">
+      <h3>Manage Users</h3>
+      <p class="admin-desc">Admin accounts for this panel, stored on your backend server.</p>
+      <table class="admin-table">
+        <thead><tr><th>Username</th><th></th></tr></thead>
+        <tbody>
+          ${USERS.map(u => `
+            <tr>
+              <td>${esc(u.username)}</td>
+              <td>${USERS.length > 1 ? `<button class="btn-ghost-danger" onclick="deleteUser('${esc(u.username)}')">Remove</button>` : `<span class="hint" style="margin:0;">last admin</span>`}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div class="admin-row" style="margin-top:12px;">
+        <div class="af"><label>New username</label><input type="text" id="nu-username"></div>
+        <div class="af"><label>New password</label><input type="text" id="nu-password"></div>
+        <button class="btn-primary" onclick="addUser()">Add User</button>
+      </div>
+    </div>
+  `;
+}
+async function addUser(){
+  const u = document.getElementById('nu-username').value.trim();
+  const p = document.getElementById('nu-password').value;
+  if(!u || !p){ alert('Enter both a username and password.'); return; }
+  try{
+    await apiFetch('/admin/users', {method:'POST', body: JSON.stringify({username:u, password:p})});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+async function deleteUser(username){
+  try{
+    await apiFetch('/admin/users/' + encodeURIComponent(username), {method:'DELETE'});
+    await loadAdminState();
+    renderAdminSubpanel();
+  } catch(err){ alert(err.message); }
+}
+
+/* ================= INIT ================= */
+(function init(){
+  const today = new Date();
+  document.getElementById('todayStr').textContent = fmtDate(today);
+  document.getElementById('sp-qty').value = 20;
+  document.getElementById('dc-date').value = today.toISOString().slice(0,10);
+  document.getElementById('dc-today-btn').addEventListener('click', () => {
+    document.getElementById('dc-date').value = new Date().toISOString().slice(0,10);
+    renderDateCalc();
+  });
+
+  loadPublicData();
+})();
+</script>
+</body>
+</html>
